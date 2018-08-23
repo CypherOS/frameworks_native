@@ -350,6 +350,10 @@ SurfaceFlinger::SurfaceFlinger() : SurfaceFlinger(SkipInitialization) {
         // for production purposes later on.
         setenv("TREBLE_TESTING_OVERRIDE", "true", true);
     }
+
+	property_get("debug.sf.disable_hwcomposer", value, "1");
+	mDebugPropDisableHWC = atoi(value);
+	ALOGI_IF(mDebugPropDisableHWC, "Disabling HWC overlays");
 }
 
 void SurfaceFlinger::onFirstRef()
@@ -2008,7 +2012,10 @@ void SurfaceFlinger::setUpHWComposer() {
                     }
 
                     layer->setGeometry(displayDevice, i);
-                    if (mDebugDisableHWC || mDebugRegion) {
+                    if (mDebugDisableHWC || mDebugPropDisableHWC || mDebugRegion) {
+						if (!mDebugPropDisableHWC && mDebugDisableHWC) {
+							property_set("debug.sf.disable_hwcomposer", "1");
+						}
                         layer->forceClientComposition(hwcId);
                     }
                 }
