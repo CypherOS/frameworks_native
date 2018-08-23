@@ -358,6 +358,10 @@ SurfaceFlinger::SurfaceFlinger() : SurfaceFlinger(SkipInitialization) {
             !strcmp(value, "kirin970")) {
         mDamageUsesScreenReference = true;
     }
+
+    property_get("debug.sf.disable_hwcomposer", value, "1");
+    mDebugPropDisableHWC = atoi(value);
+    ALOGI_IF(mDebugPropDisableHWC, "Disabling HWC overlays");
 }
 
 void SurfaceFlinger::onFirstRef()
@@ -2016,7 +2020,10 @@ void SurfaceFlinger::setUpHWComposer() {
                     }
 
                     layer->setGeometry(displayDevice, i);
-                    if (mDebugDisableHWC || mDebugRegion) {
+                    if (mDebugDisableHWC || mDebugPropDisableHWC || mDebugRegion) {
+                        if (!mDebugPropDisableHWC && mDebugDisableHWC) {
+                            property_set("debug.sf.disable_hwcomposer", "1");
+                        }
                         layer->forceClientComposition(hwcId);
                     }
                 }
